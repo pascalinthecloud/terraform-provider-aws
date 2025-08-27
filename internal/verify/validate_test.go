@@ -1003,3 +1003,30 @@ func TestCaseInsensitiveMatchDeprecation(t *testing.T) {
 		})
 	}
 }
+
+func TestSkipARNValidation(t *testing.T) {
+	t.Parallel()
+
+	// Test ARN with non-standard account ID (Cloudian S3)
+	testARN := "arn:aws:iam::ab8fcacd140e0b128730b1ea80943a4b:role/terraform-testing-role"
+
+	// Test normal validation (should fail)
+	SetGlobalSkipARNValidation(false)
+	warnings, errors := ValidARN(testARN, "test_arn")
+	if len(errors) == 0 {
+		t.Error("Expected validation error for non-standard ARN format, but got none")
+	}
+
+	// Test with skip validation enabled (should pass)
+	SetGlobalSkipARNValidation(true)
+	warnings, errors = ValidARN(testARN, "test_arn")
+	if len(errors) > 0 {
+		t.Errorf("Expected no validation errors when skip is enabled, but got: %v", errors)
+	}
+	if len(warnings) > 0 {
+		t.Errorf("Expected no validation warnings when skip is enabled, but got: %v", warnings)
+	}
+
+	// Clean up - reset to default
+	SetGlobalSkipARNValidation(false)
+}

@@ -570,6 +570,41 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 				servicemocks.MockStsAssumeRoleValidEndpoint,
 			},
 		},
+
+		"skip_arn_validation allows non-AWS ARN": {
+			Config: map[string]any{
+				"skip_arn_validation": true,
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     "arn:aws:iam::ab8fcacd140e0b128730b1ea80943a4b:role/terraform-testing-role",
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+				},
+			},
+			ExpectedCredentialsValue: mockdata.MockStsAssumeRoleCredentials,
+			MockStsEndpoints: []*servicemocks.MockEndpoint{
+				servicemocks.MockStsAssumeRoleValidEndpoint,
+			},
+		},
+
+		"skip_arn_validation false rejects non-AWS ARN": {
+			Config: map[string]any{
+				"skip_arn_validation": false,
+				"assume_role": []any{
+					map[string]any{
+						"role_arn":     "arn:aws:iam::ab8fcacd140e0b128730b1ea80943a4b:role/terraform-testing-role",
+						"session_name": servicemocks.MockStsAssumeRoleSessionName,
+					},
+				},
+			},
+			ExpectedDiags: diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Invalid assume_role configuration",
+					Detail:   "\"assume_role.0.role_arn\" (arn:aws:iam::ab8fcacd140e0b128730b1ea80943a4b:role/terraform-testing-role) is an invalid ARN: invalid account ID value (expecting to match regular expression: ^(aws|aws-managed|third-party|aws-marketplace|\\d{12}|cw.{10})$)",
+				},
+			},
+		},
 	}
 
 	for name, tc := range testCases { //nolint:paralleltest

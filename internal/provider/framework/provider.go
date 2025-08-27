@@ -183,6 +183,10 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 				Optional:    true,
 				Description: "Skip static validation of region name. Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
+			"skip_arn_validation": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Skip ARN validation. Used for AWS API implementations that do not follow AWS ARN format.",
+			},
 			"skip_requesting_account_id": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Skip requesting the account ID. Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",

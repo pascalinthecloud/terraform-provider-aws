@@ -33,6 +33,20 @@ var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
+// globalSkipARNValidation is a global flag that can be set to skip ARN validation
+// This is set during provider configuration and affects all subsequent ARN validations
+var globalSkipARNValidation bool
+
+// SetGlobalSkipARNValidation sets the global skip ARN validation flag
+func SetGlobalSkipARNValidation(skip bool) {
+	globalSkipARNValidation = skip
+}
+
+// GetGlobalSkipARNValidation gets the global skip ARN validation flag
+func GetGlobalSkipARNValidation() bool {
+	return globalSkipARNValidation
+}
+
 func StringIsInt32(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -96,6 +110,11 @@ type ARNCheckFunc func(any, string, arn.ARN) ([]string, []error)
 // * Pass the supplied checks
 func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 	return func(v any, k string) (ws []string, errors []error) {
+		// Check if ARN validation should be skipped globally
+		if GetGlobalSkipARNValidation() {
+			return ws, errors
+		}
+		
 		value, ok := v.(string)
 		if !ok {
 			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))

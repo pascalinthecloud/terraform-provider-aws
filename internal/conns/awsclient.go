@@ -41,6 +41,7 @@ type AWSClient struct {
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
+	skipARNValidation         bool   // From provider configuration.
 	stsRegion                 string // From provider configuration.
 	terraformVersion          string // From provider configuration.
 }
@@ -63,6 +64,10 @@ func (c *AWSClient) ServicePackages(_ context.Context) iter.Seq[ServicePackage] 
 
 func (c *AWSClient) TerraformVersion(_ context.Context) string {
 	return c.terraformVersion
+}
+
+func (c *AWSClient) SkipARNValidation(_ context.Context) bool {
+	return c.skipARNValidation
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.

@@ -51,6 +51,7 @@ type Config struct {
 	SecretKey                      string
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
+	SkipARNValidation              bool
 	SkipCredsValidation            bool
 	SkipRegionValidation           bool
 	SkipRequestingAccountId        bool
@@ -194,6 +195,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.accountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.skipARNValidation = c.SkipARNValidation
 	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.

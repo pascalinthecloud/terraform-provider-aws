@@ -237,6 +237,12 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "Skip static validation of region name. " +
 						"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 				},
+				"skip_arn_validation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Description: "Skip ARN validation. " +
+						"Used for AWS API implementations that do not follow AWS ARN format.",
+				},
 				"skip_requesting_account_id": {
 					Type:     schema.TypeBool,
 					Optional: true,
@@ -326,6 +332,10 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	// Set global ARN validation flag early in configuration
+	skipARNValidation := d.Get("skip_arn_validation").(bool)
+	verify.SetGlobalSkipARNValidation(skipARNValidation)
+
 	terraformVersion := p.provider.TerraformVersion
 	if terraformVersion == "" {
 		// Terraform 0.12 introduced this field to the protocol
@@ -345,6 +355,7 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool),
 		SecretKey:                      d.Get("secret_key").(string),
+		SkipARNValidation:              d.Get("skip_arn_validation").(bool),
 		SkipCredsValidation:            d.Get("skip_credentials_validation").(bool),
 		SkipRegionValidation:           d.Get("skip_region_validation").(bool),
 		SkipRequestingAccountId:        d.Get("skip_requesting_account_id").(bool),
