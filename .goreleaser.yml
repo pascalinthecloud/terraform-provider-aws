@@ -1,22 +1,20 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-# This is an example goreleaser.yaml file for releasing a Terraform Provider
-# Optimized for faster builds
+version: 2
 
 project_name: terraform-provider-aws
 
 before:
   hooks:
-    - go mod tidy
+    - "go mod download"
 
 builds:
-  - env:
+  - binary: "{{ .ProjectName }}_v{{ .Version }}_x5"
+    env:
       - CGO_ENABLED=0
-    main: ./main.go
-    binary: "{{ .ProjectName }}_v{{ .Version }}"
-    ldflags:
-      - "-s -w -X github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}"
+    flags:
+      - -trimpath
     goos:
       - linux
       - darwin
@@ -29,23 +27,24 @@ builds:
         goarch: arm64
       - goos: darwin
         goarch: amd64
-      - goos: darwin
-        goarch: arm64
       - goos: windows
         goarch: arm64
-      - goos: windows
-        goarch: amd64
-    # Add build flags for faster compilation
-    flags:
-      - -trimpath
-    # Reduce memory usage during build
+    ldflags:
+      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - format: zip
+  - files:
+      - src: LICENSE
+        dst: LICENSE.txt
+    formats: ["zip"]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
+  algorithm: sha256
+  extra_files:
+    - glob: "terraform-registry-manifest.json"
+      name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
 
 signs:
@@ -60,7 +59,6 @@ signs:
       - "${artifact}"
 
 release:
-  draft: false
   extra_files:
     - glob: "terraform-registry-manifest.json"
       name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
